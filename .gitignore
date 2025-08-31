@@ -1,0 +1,12 @@
+first_cuda_run/elementwise_add_kernel.cu
+first_cuda_run/setup.py
+first_cuda_run/test.py
+first_cuda_run/build/lib.linux-x86_64-cpython-313/first_cuda_run.cpython-313-x86_64-linux-gnu.so
+first_cuda_run/build/temp.linux-x86_64-cpython-313/elementwise_add_kernel.o
+first_cuda_run/dist/first_cuda_run-0.0.0-py3.13-linux-x86_64.egg
+first_cuda_run/first_cuda_run.egg-info/dependency_links.txt
+first_cuda_run/first_cuda_run.egg-info/PKG-INFO
+first_cuda_run/first_cuda_run.egg-info/SOURCES.txt
+first_cuda_run/first_cuda_run.egg-info/top_level.txt
+vector_add/kernel_hello.cu
+vector_add/vector_add.cpp
