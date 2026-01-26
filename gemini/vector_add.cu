@@ -49,12 +49,36 @@ int main() {
 
     printf("Launching kernel with Grid Size: %d, Block Size: %d\n", gridSize, blockSize);
 
-    // === TODO 3: 启动核函数 ===
-    // 挑战：填入刚才计算的 grid 和 block，并传入参数
+    // ... (前面的内存分配和拷贝代码保持不变) ...
+
+    // --- 新增：准备计时器 ---
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    printf("Launching kernel with Grid Size: %d, Block Size: %d\n", gridSize, blockSize);
+
+    // 1. 记录开始时间
+    cudaEventRecord(start);
+
+    // 2. 启动核函数
     vector_add<<<gridSize, blockSize>>>(d_a, d_b, d_c, n);
 
-    // 等待 GPU 完成
-    cudaDeviceSynchronize();
+    // 3. 记录结束时间
+    cudaEventRecord(stop);
+
+    // 4. 等待事件完成 (这一步非常重要，必须等待 GPU 也就是 stop 事件真正发生)
+    cudaEventSynchronize(stop);
+
+    // 5. 计算时间差
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    printf("Kernel Execution Time: %.3f ms\n", milliseconds);
+    printf("Effective Bandwidth: %.3f GB/s\n", 
+           (3.0 * bytes) / milliseconds / 1e6); // 读取A, 读取B, 写入C = 3倍内存
+
+    // ... (后面的内存拷贝回 Host 和验证代码保持不变) ...
 
     // 4. 将结果从 Device 拷贝回 Host
     cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost);
