@@ -39,7 +39,18 @@ int main() {
     cudaEventCreate(&stop);
 
     printf("Launching kernel with Grid Size: %d, Block Size: %d\n", gridSize, blockSize);
+    // ... 初始化数据 ...
 
+    int deviceId;
+    cudaGetDevice(&deviceId);
+
+    // --- 关键优化：异步预取 ---
+    // 在 Kernel 启动前，显式命令驱动把 a 和 b 搬运到 GPU (deviceId)
+    cudaMemPrefetchAsync(a, bytes, deviceId, 0);
+    cudaMemPrefetchAsync(b, bytes, deviceId, 0);
+    
+    // c 是输出，虽然不需要预取数据，但预取内存页可以让 GPU 准备好写操作
+    cudaMemPrefetchAsync(c, bytes, deviceId, 0);
     // 4. 记录开始
     cudaEventRecord(start);
 
