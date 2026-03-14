@@ -1,0 +1,18 @@
+# Compiled object files
+*.o
+
+# Executables
+# 忽略编译生成的可执行文件
+# 你可以根据实际生成的文件名进行修改
+softmax
+softmax_warp
+softmax_online
+a.out
+
+# Build directory (for CMake, Make, etc.)
+build/
+bin/
+obj/
+
+# IDE-specific files
+.vscode/
