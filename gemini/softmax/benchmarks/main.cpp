@@ -117,6 +117,9 @@ int main() {
     // Test Case 2: Warp Shuffle
     run_benchmark("Warp Softmax (Shuffle)",     SoftmaxType::Warp,  d_input, d_output, M, N);
 
+    // Test Case 3: Online Softmax
+    run_benchmark("Online Softmax",             SoftmaxType::Online, d_input, d_output, M, N);
+
     // 4. 清理
     CHECK_CUDA(cudaFree(d_input));
     CHECK_CUDA(cudaFree(d_output));

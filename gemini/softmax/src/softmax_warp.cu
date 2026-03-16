@@ -54,7 +54,9 @@ static __global__ void softmax_warp_kernel(float* input, float* output, int N) {
     // ============================================
     
     float local_max = -INFINITY;
-    // Grid Stride Loop (处理 N > 256 的情况) each block deals with N elements
+    // Block-Stride Loop (处理 N > 256 的情况) each block deals with N elements, per thread processes multiple elements
+    // for 1st thread, it processes input_row[0], input_row[256], input_row[512], ...
+    // and stores the max in local_max. there are 256 threads and 256 local_max, but they will be reduced to 8 warps' max in the next step.
     for (int i = tid; i < N; i += BLOCK_SIZE) {
         local_max = fmaxf(local_max, input_row[i]);
     }

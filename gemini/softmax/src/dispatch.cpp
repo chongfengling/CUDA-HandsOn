@@ -10,7 +10,9 @@ void launch_softmax(float* input, float* output, int M, int N, SoftmaxType type)
         case SoftmaxType::Warp:
             launch_softmax_warp(input, output, M, N);
             break;
-        
+        case SoftmaxType::Online:
+            launch_softmax_online(input, output, M, N);
+            break;
         default:
             throw std::runtime_error("Unknown softmax type");
     }

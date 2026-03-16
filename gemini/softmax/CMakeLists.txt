@@ -16,6 +16,7 @@ include_directories(include)
 add_library(softmax_lib 
     src/softmax_naive.cu 
     src/softmax_warp.cu
+    src/softmax_online.cu
     src/dispatch.cpp 
 )
 

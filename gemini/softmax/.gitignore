@@ -16,3 +16,7 @@ obj/
 
 # IDE-specific files
 .vscode/
+
+# Notes
+*.pdf
+notes.md
