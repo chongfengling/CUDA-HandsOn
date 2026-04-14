@@ -1,46 +1,49 @@
-#define TILE 16 //same shape of blocks
+#include <cuda_runtime.h>
+#include "kernels.h"
+
+#define TILEWIDTH 16
 
 __global__ void gemm_shared_kernel(
     int M, int N, int K,
-    const float* A,
-    const float* B,
-    float* C)
+    const float* __restrict__ A,
+    const float* __restrict__ B,
+    float* __restrict__ C)
 {
-    // shared memory tile
-    __shared__ float As[TILE][TILE];
-    __shared__ float Bs[TILE][TILE];
+    __shared__ float As[TILEWIDTH][TILEWIDTH];
+    __shared__ float Bs[TILEWIDTH][TILEWIDTH];
+    
+    int bx = blockIdx.x; int by = blockIdx.y;
+    int tx = threadIdx.x; int ty = threadIdx.y;
 
-    int row = blockIdx.y * TILE + threadIdx.y; // TILE=blockDIm(x,y)  和构造相关 one tile one block
-    int col = blockIdx.x * TILE + threadIdx.x;
+    // identify the row and column of the C elemnet
+    // where blockDim.x = blockDim.y = TILE_WIDTH
+    int row = by * TILEWIDTH + ty;
+    int col = bx * TILEWIDTH + tx;
 
     float sum = 0.0f;
 
-    // 遍历 K 维度的 tile
-    for (int t = 0; t < (K + TILE - 1) / TILE; t++) {
-        // row major, from left to right
-        int tiledA = t * TILE + threadIdx.x;
-        // from top to bottom
-        int tiledB = t * TILE + threadIdx.y;
-
-        // load A tile
-        if (row < M && tiledA < K)
-            //row base, As[ty][tx] to avoid bank conflict
-            As[threadIdx.y][threadIdx.x] = A[row * K + tiledA]; // t * Tile + row * K + threadIdx.x
+    for (int t = 0; t < (K + TILEWIDTH - 1) / TILEWIDTH; t++) {
+        int tileA = t * TILEWIDTH + tx;
+        int tileB = t * TILEWIDTH + ty;
+        
+        // location of an element in A matrix: A[row][col] = row * width + col
+        // tile A from left to right (k direction)
+        if (row < M && tileA < K)
+            As[ty][tx] = A[row * K + tileA];
         else
-            As[threadIdx.y][threadIdx.x] = 0.0f;
+            As[ty][tx] = 0.0f;
 
-        // load B tile
-        if (col < N && tiledB < K)
-            Bs[threadIdx.y][threadIdx.x] = B[tiledB * N + col];
+        // tile B from top to bottom (k direction)
+        if (col < N && tileB < K)
+            Bs[ty][tx] = B[tileB * N + col];
         else
-            Bs[threadIdx.y][threadIdx.x] = 0.0f;
+            Bs[ty][tx] = 0.0f;
 
         __syncthreads();
 
-        // compute partial result
         #pragma unroll
-        for (int i = 0; i < TILE; i++) {
-            sum += As[threadIdx.y][i] * Bs[i][threadIdx.x];
+        for (int i = 0; i < TILEWIDTH; i++) {
+            sum += As[ty][i] * Bs[i][tx];
         }
 
         __syncthreads();
@@ -50,9 +53,8 @@ __global__ void gemm_shared_kernel(
         C[row * N + col] = sum;
 }
 
-void launch_gemm_shared(const float* A, const float* B, float* C, int M, int N, int K){
-    dim3 block(16, 16);
-    dim3 grid((K + block.x - 1) / block.x,
-              (K + block.y - 1) / block.y);
-    gemm_shared_kernel<<<grid, block>>>(A, B, C, M, N, K);
+void launch_gemm_shared(const float* A, const float* B, float* C, int M, int N, int K) {
+    dim3 block(TILEWIDTH, TILEWIDTH);
+    dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
+    gemm_shared_kernel<<<grid, block>>>(M, N, K, A, B, C);
 }

@@ -1,2 +1,6 @@
 /learning_logs.md
 /tmp/
+
+*/build/*
+gemm/bench_gemm
+gemm/test_gemm
