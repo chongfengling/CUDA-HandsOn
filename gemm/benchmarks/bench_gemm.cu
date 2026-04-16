@@ -88,6 +88,7 @@ int main() {
         std::vector<BenchmarkResult> results;
         results.push_back(run_benchmark(M, N, K, GemmAlgo::NAIVE, "NAIVE"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::SHARED_MEMORY, "SHARED_MEM"));
+        results.push_back(run_benchmark(M, N, K, GemmAlgo::REGISTER, "REGISTER"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::CUBLAS, "CUBLAS"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::CUTLASS, "CUTLASS"));
 

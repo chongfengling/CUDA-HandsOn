@@ -130,6 +130,7 @@ void run_algo_tests(GemmAlgo algo, const std::string& algo_name) {
 int main() {
     run_algo_tests(GemmAlgo::NAIVE, "NAIVE");
     run_algo_tests(GemmAlgo::SHARED_MEMORY, "SHARED_MEMORY");
+    run_algo_tests(GemmAlgo::REGISTER, "REGISTER");
     std::cout << "\nAll tests passed successfully!\n";
     return 0;
 }

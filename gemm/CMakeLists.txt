@@ -15,6 +15,7 @@ add_library(gemm_lib
     src/kernels/dispatch.cpp
     src/kernels/gemm_naive.cu
     src/kernels/gemm_shared.cu
+    src/kernels/gemm_register.cu
     src/kernels/gemm_cublas.cu
     src/kernels/gemm_cutlass.cu
 )

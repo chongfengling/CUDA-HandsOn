@@ -27,7 +27,8 @@ The project follows a standard C++ engineering layout, separating public interfa
 │       ├── dispatch.cpp  # Routes the call to the selected algorithm
 │       ├── kernels.h     # Internal header declaring kernel launch functions
 │       ├── gemm_naive.cu # Implementation of the naive kernel
-│       └── gemm_shared.cu# Implementation of the shared memory tiled kernel
+│       ├── gemm_shared.cu  # Implementation of the shared memory tiled kernel
+|       └── gemm_register.cu # Implementation of the register tiled kernel
 ├── tests/
 │   └── test_gemm.cu      # Comprehensive unit tests (correctness verification)
 └── benchmarks/

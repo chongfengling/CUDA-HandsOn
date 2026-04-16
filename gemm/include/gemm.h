@@ -7,6 +7,7 @@
 enum class GemmAlgo {
     NAIVE,
     SHARED_MEMORY,
+    REGISTER,
     CUBLAS,
     CUTLASS
 };
