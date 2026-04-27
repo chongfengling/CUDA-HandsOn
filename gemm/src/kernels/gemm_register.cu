@@ -2,13 +2,13 @@
 #include "kernels.h"
 
 // Tiling parameters
-#define BM 128 // M dimension covered by each thread block
-#define BN 128 // N dimension covered by each thread block
-#define BK 8   // K dimension covered by each thread block (tile depth)
+// BM: M dimension covered by each thread block
+// BN: N dimension covered by each thread block
+// BK: K dimension covered by each thread block (tile depth)
 
 // Thread-level tiling parameters
-#define TM 8   // Rows of C processed by each thread
-#define TN 8   // Columns of C processed by each thread
+// TM: Rows of C processed by each thread
+// TN: Columns of C processed by each thread
 
 /**
  * GEMM kernel optimized with Register Tiling and Shared Memory.
@@ -20,11 +20,12 @@
  * 4. Data is moved from Shared Memory to Registers to minimize SMEM bank conflict 
  *    overhead and latency during the innermost compute loop.
  */
+template <typename T, int BM, int BN, int BK, int TM, int TN>
 __global__ void gemm_register_kernel(
     int M, int N, int K,
-    const float* __restrict__ A,
-    const float* __restrict__ B,
-    float* __restrict__ C)
+    const T* __restrict__ A,
+    const T* __restrict__ B,
+    T* __restrict__ C)
 {
     // Thread and block indices
     int tx = threadIdx.x; 
@@ -33,15 +34,22 @@ __global__ void gemm_register_kernel(
     int by = blockIdx.y;
 
     // Shared memory for tiling A and B
-    __shared__ float As[BM][BK];
-    __shared__ float Bs[BK][BN];
+    __shared__ T As[BM][BK];
+    __shared__ T Bs[BK][BN];
 
     // Accumulators in registers (8x8 sub-tile per thread)
-    float r_c[TM][TN] = {0.0f};
+    T r_c[TM][TN];
+    #pragma unroll
+    for (int m = 0; m < TM; m++) {
+        #pragma unroll
+        for (int n = 0; n < TN; n++) {
+            r_c[m][n] = T(0);
+        }
+    }
     
     // Register fragments for A and B to support outer-product computation
-    float fragA[TM]; 
-    float fragB[TN];  
+    T fragA[TM]; 
+    T fragB[TN];  
 
     // Top-left corner of the C sub-tile this thread is responsible for
     int row = by * BM + ty * TM;
@@ -68,7 +76,7 @@ __global__ void gemm_register_kernel(
             if (a_global_row < M && a_global_col < K) {
                 As[a_tile_row][a_tile_col] = A[a_global_row * K + a_global_col];
             } else {
-                As[a_tile_row][a_tile_col] = 0.0f;
+                As[a_tile_row][a_tile_col] = T(0);
             }
 
             // Load Bs: Matrix B is K x N, tile is BK x BN
@@ -80,7 +88,7 @@ __global__ void gemm_register_kernel(
             if (b_global_row < K && b_global_col < N) {
                 Bs[b_tile_row][b_tile_col] = B[b_global_row * N + b_global_col];
             } else {
-                Bs[b_tile_row][b_tile_col] = 0.0f;
+                Bs[b_tile_row][b_tile_col] = T(0);
             }
         }
 
@@ -123,9 +131,14 @@ __global__ void gemm_register_kernel(
 }
 
 void launch_gemm_register(const float* A, const float* B, float* C, int M, int N, int K) {
+    const int BM = 128;
+    const int BN = 128;
+    const int BK = 8;
+    const int TM = 8;
+    const int TN = 8;
     // 16x16 threads = 256 threads per block.
     dim3 block(16, 16);
     // Each block handles 128x128 output elements.
     dim3 grid((N + BN - 1) / BN, (M + BM - 1) / BM);
-    gemm_register_kernel<<<grid, block>>>(M, N, K, A, B, C);
+    gemm_register_kernel<float, BM, BN, BK, TM, TN><<<grid, block>>>(M, N, K, A, B, C);
 }
