@@ -1,0 +1,62 @@
+
+==================== System & Host Environment ====================
+OS             : Linux 6.17.0-22-generic
+Host CPU       : AMD Ryzen 9 9900X 12-Core Processor
+System RAM     : 46.69 GB
+Python Version : 3.13.5
+
+==================== C++/CUDA Build Toolchain ====================
+GCC             : gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+NVCC            : Build cuda_12.9.r12.9/compiler.35813241_0
+CMake           : cmake version 4.3.2
+Ninja           : 1.13.0.git.kitware.jobserver-pipe-1
+
+==================== Python Packages (AI Infra) ====================
+torch           : 2.11.0
+torchvision     : 0.26.0
+triton          : 3.6.0
+flash-attn      : NOT INSTALLED
+vllm            : 0.20.0+cu129
+xformers        : NOT INSTALLED
+ninja           : 1.13.0
+pybind11        : 3.0.1
+
+==================== PyTorch CUDA Environment ====================
+PyTorch Version   : 2.11.0+cu130
+CUDA Available    : True
+PyTorch CUDA Ver  : 13.0
+cuDNN Version     : 91900
+Current Device    : NVIDIA GeForce RTX 5080
+Device Capability : 12.0 (sm_120)
+
+==================== Detailed GPU Hardware Info (via Native CUDA API) ====================
+--- [Hardware Identification] ---
+Device Name: NVIDIA GeForce RTX 5080
+Compute Capability: 12.0 (sm_120)
+Number of SMs: 84
+GPU Clock Rate: 2.65 GHz
+
+--- [Memory & Bandwidth] ---
+Total Global Memory: 15.46 GB
+L2 Cache Size: 64.00 MB
+Memory Bus Width: 256 bits
+Memory Clock Rate: 15.00 GHz
+Peak Memory Bandwidth: 960.06 GB/s
+ECC Enabled: No
+
+--- [Execution Limits] ---
+Warp Size: 32
+Max Threads per Block: 1024
+Max Threads per SM:    1536
+
+--- [Shared Memory & Registers] ---
+Max Shared Memory per Block (Default): 48.00 KB
+Max Shared Memory per Block (Opt-in):  99.00 KB
+Max Shared Memory per SM:              100.00 KB
+Max Registers per Block: 65536
+Max Registers per SM:    65536
+
+--- [Grid/Block Dimensions] ---
+Max Block Dim: [1024, 1024, 64]
+Max Grid Dim:  [2147483647, 65535, 65535]
+

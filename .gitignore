@@ -1,6 +1,12 @@
 /learning_logs.md
 /tmp/
 
-*/build/*
+build/
 gemm/bench_gemm
 gemm/test_gemm
+tools/device_info
+
+*.csv
+*.ncu-rep
+*.nsys-rep
+*.sqlite
