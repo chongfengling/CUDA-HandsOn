@@ -1,14 +1,23 @@
 /learning_logs.md
 /tmp/
 docs/
-/**/profile_results/
+# Ignore generated profiler outputs, but keep per-result analysis notes.
+**/profile_results/**
+!**/profile_results/
+!**/profile_results/**/
+# !**/profile_results/**/analysis.md
+**/scripts.sh
 
 build/
 gemm/bench_gemm
 gemm/test_gemm
 tools/device_info
+tools/__pycache__/
+
 
 *.csv
+!**/profile_results/**/merged_metrics.csv
 *.ncu-rep
 *.nsys-rep
 *.sqlite
+kernels/gemm/GEMM_OPTIMIZATION_QA.md

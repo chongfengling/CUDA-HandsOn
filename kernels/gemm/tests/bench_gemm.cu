@@ -4,6 +4,9 @@
 #include <tuple>
 #include <iomanip>
 #include <string>
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <cuda_runtime.h>
 #include "gemm.h"
 #include "cuda_utils.h"
@@ -54,7 +57,86 @@ BenchmarkResult run_benchmark(int M, int N, int K, GemmAlgo algo, const std::str
     return {algo_name, avg, gflops};
 }
 
-int main() {
+bool parse_algo(std::string name, GemmAlgo& algo, std::string& algo_name) {
+    std::transform(name.begin(), name.end(), name.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+
+    if (name == "NAIVE") {
+        algo = GemmAlgo::NAIVE;
+        algo_name = "NAIVE";
+    } else if (name == "SHARED_MEM" || name == "SHARED_MEMORY" || name == "SHARED") {
+        algo = GemmAlgo::SHARED_MEMORY;
+        algo_name = "SHARED_MEM";
+    } else if (name == "REGISTER") {
+        algo = GemmAlgo::REGISTER;
+        algo_name = "REGISTER";
+    } else if (name == "VECTORIZED" || name == "VECTOR") {
+        algo = GemmAlgo::VECTORIZED;
+        algo_name = "VECTORIZED";
+    } else if (name == "DOUBLE_BUF" || name == "DOUBLE_BUFFERED" || name == "BUFFER") {
+        algo = GemmAlgo::DOUBLE_BUFFERED;
+        algo_name = "DOUBLE_BUF";
+    } else if (name == "TENSOR_CORE" || name == "TENSOR") {
+        algo = GemmAlgo::TENSOR_CORE;
+        algo_name = "TENSOR_CORE";
+    } else if (name == "ASYNC") {
+        algo = GemmAlgo::ASYNC;
+        algo_name = "ASYNC";
+    } else if (name == "ULTIMATE") {
+        algo = GemmAlgo::ULTIMATE;
+        algo_name = "ULTIMATE";
+    } else if (name == "ZHIHU") {
+        algo = GemmAlgo::ZHIHU;
+        algo_name = "ZHIHU";
+    } else if (name == "CUBLAS") {
+        algo = GemmAlgo::CUBLAS;
+        algo_name = "CUBLAS";
+    } else if (name == "CUTLASS") {
+        algo = GemmAlgo::CUTLASS;
+        algo_name = "CUTLASS";
+    } else {
+        return false;
+    }
+    return true;
+}
+
+void print_usage(const char* prog) {
+    std::cerr << "Usage:\n"
+              << "  " << prog << "\n"
+              << "  " << prog << " M N K ALGO [iters]\n\n"
+              << "ALGO: NAIVE, SHARED_MEM, REGISTER, VECTORIZED, DOUBLE_BUF, "
+              << "TENSOR_CORE, ASYNC, ULTIMATE, ZHIHU, CUBLAS, CUTLASS\n";
+}
+
+int main(int argc, char** argv) {
+    if (argc != 1 && argc != 5 && argc != 6) {
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if (argc == 5 || argc == 6) {
+        int M = std::stoi(argv[1]);
+        int N = std::stoi(argv[2]);
+        int K = std::stoi(argv[3]);
+        int iters = (argc == 6) ? std::stoi(argv[5]) : 10;
+
+        GemmAlgo algo;
+        std::string algo_name;
+        if (!parse_algo(argv[4], algo, algo_name)) {
+            std::cerr << "Unsupported algorithm: " << argv[4] << "\n";
+            print_usage(argv[0]);
+            return EXIT_FAILURE;
+        }
+
+        BenchmarkResult result = run_benchmark(M, N, K, algo, algo_name, iters);
+        std::cout << "M,N,K,Algorithm,Time_ms,GFLOPS\n"
+                  << M << "," << N << "," << K << ","
+                  << result.name << ","
+                  << std::fixed << std::setprecision(4) << result.avg_ms << ","
+                  << std::fixed << std::setprecision(2) << result.gflops << "\n";
+        return EXIT_SUCCESS;
+    }
+
     std::vector<std::tuple<int, int, int>> shapes = {
         {1024, 1024, 1024},
         {2048, 2048, 2048},

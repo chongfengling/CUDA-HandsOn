@@ -1,0 +1,47 @@
+metric,M1024_N8192,M32768_N128,M4096_N4096,M64_N16384,M8192_N1024,M8192_N512
+gpu__time_duration.sum (us),83.872000,96.352000,147.872000,23.168000,69.184000,52.320000
+launch__grid_size,"1,024","32,768","4,096",64,"8,192","8,192"
+launch__block_size,256,256,256,256,256,256
+launch__thread_count (thread),262144,8388608,1048576,16384,2097152,2097152
+launch__waves_per_multiprocessor,2.03,65.02,8.13,0.13,16.25,16.25
+launch__registers_per_thread (register/thread),38,38,38,38,38,38
+launch__shared_mem_per_block (Kbyte/block),1.056000,1.056000,1.056000,1.056000,1.056000,1.056000
+launch__occupancy_limit_blocks (block),24.000000,24.000000,24.000000,24.000000,24.000000,24.000000
+launch__occupancy_limit_registers (block),6.000000,6.000000,6.000000,6.000000,6.000000,6.000000
+launch__occupancy_limit_shared_mem (block),14.000000,14.000000,14.000000,14.000000,14.000000,14.000000
+launch__occupancy_limit_warps (block),6.000000,6.000000,6.000000,6.000000,6.000000,6.000000
+sm__throughput.avg.pct_of_peak_sustained_elapsed (%),18.601428,57.902637,23.123050,7.879036,40.375357,39.484375
+sm__warps_active.avg.pct_of_peak_sustained_active (%),87.025192,80.546967,78.739699,16.558831,67.117412,73.979780
+smsp__cycles_active.avg.pct_of_peak_sustained_elapsed (%),84.614844,93.215658,94.482103,66.621995,86.473594,76.540546
+dram__bytes.sum (Mbyte),68.763136,34.827520,123.725568,10.443264,51.976192,34.134016
+dram__bytes_op_read.sum (Mbyte),33.858816,17.230080,67.712000,4.559616,34.283520,17.476352
+dram__bytes_op_write.sum (Mbyte),34.904320,17.597440,56.013568,5.883648,17.692672,16.657664
+dram__throughput.avg.pct_of_peak_sustained_elapsed (%),85.512811,37.703142,87.266532,47.075794,78.368948,68.084150
+gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed (%),85.512811,37.703142,87.266532,47.075794,78.368948,68.084150
+gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed (%),85.512811,57.902637,87.266532,47.075794,78.368948,68.084150
+l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum (Mbyte),100.663296,50.331648,201.326592,12.582912,100.663296,50.331648
+l1tex__t_bytes_pipe_lsu_mem_global_op_st.sum (Mbyte),67.052160,33.554432,134.012032,8.388608,67.087232,33.549824
+l1tex__average_t_sectors_per_request_pipe_lsu_mem_global_op_ld.ratio (sector),4.000000,4.000000,4.000000,4.000000,4.000000,4.000000
+l1tex__average_t_sectors_per_request_pipe_lsu_mem_global_op_st.ratio (sector),3.996620,4.000000,3.993870,4.000000,3.998711,3.999451
+lts__t_bytes.sum (Mbyte),169.176000,52.216288,321.550848,16.963968,112.199744,51.819680
+l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum,"18,696","329,720","74,807","1,152","149,805","149,333"
+l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum,"18,852","591,385","75,758","1,156","149,969","148,562"
+l1tex__data_bank_conflicts_pipe_lsu.sum,"155,779","102,645","300,015","4,253","249,338","107,422"
+smsp__warp_issue_stalled_barrier_per_warp_active.pct (%),4.198883,46.878398,9.952718,3.654091,19.002560,13.358014
+smsp__warp_issue_stalled_long_scoreboard_per_warp_active.pct (%),80.508590,20.759357,77.349061,70.008459,62.560665,55.725981
+smsp__warp_issue_stalled_short_scoreboard_per_warp_active.pct (%),2.940376,17.869876,3.287296,7.485397,9.187636,10.568094
+smsp__warp_issue_stalled_math_pipe_throttle_per_warp_active.pct (%),0.056162,0.448104,0.056500,0.028822,0.348501,0.807886
+smsp__warp_issue_stalled_mio_throttle_per_warp_active.pct (%),0.530065,0.188049,0.311194,0,0.915496,0.336353
+smsp__warp_issue_stalled_not_selected_per_warp_active.pct (%),0.475046,3.084463,0.543142,0.209136,4.059651,5.474732
+smsp__warp_issue_stalled_no_instruction_per_warp_active.pct (%),0.335912,0.919704,0.393778,1.225372,1.517531,0.978619
+sm__inst_executed.sum (inst),8740864.000000,30801920.000000,19759104.000000,1021440.000000,16515072.000000,13828096.000000
+sm__inst_executed_pipe_fma.sum (inst),3806208.000000,4358144.000000,7753728.000000,471360.000000,4300800.000000,2596864.000000
+sm__inst_executed_pipe_lsu.sum (inst),1462272.000000,5242880.000000,3227648.000000,173312.000000,2523136.000000,1867776.000000
+sm__inst_executed_pipe_xu.sum (inst),786432.000000,393216.000000,1572864.000000,98304.000000,786432.000000,393216.000000
+sm__sass_thread_inst_executed_op_fadd_pred_on.sum (inst),26640384.000000,59768832.000000,56229888.000000,3237888.000000,36962304.000000,24379392.000000
+sm__sass_thread_inst_executed_op_fmul_pred_on.sum (inst),8388608.000000,4194304.000000,16777216.000000,1048576.000000,8388608.000000,4194304.000000
+sm__sass_thread_inst_executed_op_ffma_pred_on.sum (inst),75497472.000000,37748736.000000,150994944.000000,9437184.000000,75497472.000000,37748736.000000
+smsp__thread_inst_executed.sum (inst),279707648.000000,985661440.000000,632291328.000000,32686080.000000,528482304.000000,442499072.000000
+smsp__thread_inst_executed_pred_on.sum (inst),275916800.000000,910491648.000000,617127936.000000,32449152.000000,500252672.000000,414269440.000000
+smsp__thread_inst_executed_per_inst_executed.ratio,32,32,32,32,32,32
+smsp__sass_average_branch_targets_threads_uniform.pct (%),100.000000,100.000000,100.000000,100.000000,100.000000,100.000000
