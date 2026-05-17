@@ -11,7 +11,8 @@
  * @algorithm
  * - Uses `float4` data types to perform 128-bit vectorized memory transactions.
  * - **Maximizing Bandwidth**: A single 128-bit instruction (`LDG.E.128`) is significantly more efficient than four separate 32-bit instructions (`LDG.E`), fully utilizing the L2 cache and memory controllers.
- * - Shared memory arrays (`As`) are often transposed to eliminate bank conflicts during the float4 read/write phase.
+ * - Keeps the vectorized shared-memory layout while matching the code structure
+ *   and 2D thread-tile mapping of `gemm_register.cu`.
  */
 
 template <typename T, int BM, int BN, int BK, int TM, int TN>
@@ -21,23 +22,36 @@ __global__ void gemm_vectorized_kernel(
     const T* __restrict__ B,
     T* __restrict__ C)
 {
-    __shared__ T As[BK][BM]; // Transposed for bank-free access
-    __shared__ T Bs[BK][BN];
-
+    // Thread and block indices
     int tx = threadIdx.x;
     int ty = threadIdx.y;
     int bx = blockIdx.x;
     int by = blockIdx.y;
-    int tid = ty * blockDim.x + tx;
 
+    // Shared memory for tiling A and B. As is transposed for vectorized loads.
+    __shared__ T As[BK][BM]; // Transposed for bank-free access
+    __shared__ T Bs[BK][BN];
+
+    // Accumulators in registers (8x8 sub-tile per thread)
     T r_c[TM][TN];
     #pragma unroll
-    for (int i = 0; i < TM; i++) {
+    for (int m = 0; m < TM; m++) {
         #pragma unroll
-        for (int j = 0; j < TN; j++) {
-            r_c[i][j] = T(0);
+        for (int n = 0; n < TN; n++) {
+            r_c[m][n] = T(0);
         }
     }
+
+    // Register fragments for A and B to support outer-product computation
+    T fragA[TM];
+    T fragB[TN];
+
+    // Top-left corner of the C sub-tile this thread is responsible for
+    int row = by * BM + ty * TM;
+    int col = bx * BN + tx * TN;
+
+    // Linear thread ID in a 16x16 block (0-255)
+    int tid = ty * blockDim.x + tx;
 
     int a_load_row = tid / (BK / 4); 
     int a_load_col = (tid % (BK / 4)) * 4;
@@ -55,7 +69,7 @@ __global__ void gemm_vectorized_kernel(
             As[a_load_col + 2][a_load_row] = tmp.z;
             As[a_load_col + 3][a_load_row] = tmp.w;
         } else {
-            for(int i=0; i<4; i++) As[a_load_col+i][a_load_row] = T(0);
+            for (int i = 0; i < 4; i++) As[a_load_col + i][a_load_row] = T(0);
         }
 
         int b_global_row = k_tile + b_load_row;
@@ -72,33 +86,32 @@ __global__ void gemm_vectorized_kernel(
         // Compute
         #pragma unroll
         for (int k = 0; k < BK; k++) {
-            T fragA[TM];
-            T fragB[TN];
             #pragma unroll
-            for (int i = 0; i < TM; i++) fragA[i] = As[k][ty * TM + i];
+            for (int m = 0; m < TM; m++) fragA[m] = As[k][ty * TM + m];
             #pragma unroll
-            for (int i = 0; i < TN; i++) fragB[i] = Bs[k][tx * TN + i];
+            for (int n = 0; n < TN; n++) fragB[n] = Bs[k][tx * TN + n];
 
             #pragma unroll
-            for (int i = 0; i < TM; i++) {
+            for (int m = 0; m < TM; m++) {
                 #pragma unroll
-                for (int j = 0; j < TN; j++) {
-                    r_c[i][j] += fragA[i] * fragB[j];
+                for (int n = 0; n < TN; n++) {
+                    r_c[m][n] += fragA[m] * fragB[n];
                 }
             }
         }
         __syncthreads();
     }
 
-    // Write back
-    int row = by * BM + ty * TM;
-    int col = bx * BN + tx * TN;
+    // Write the final accumulated results from registers back to Global Memory C.
     #pragma unroll
-    for (int i = 0; i < TM; i++) {
+    for (int m = 0; m < TM; m++) {
         #pragma unroll
-        for (int j = 0; j < TN; j++) {
-            if (row + i < M && col + j < N) {
-                C[(row + i) * N + (col + j)] = r_c[i][j];
+        for (int n = 0; n < TN; n++) {
+            int c_global_row = row + m;
+            int c_global_col = col + n;
+
+            if (c_global_row < M && c_global_col < N) {
+                C[c_global_row * N + c_global_col] = r_c[m][n];
             }
         }
     }

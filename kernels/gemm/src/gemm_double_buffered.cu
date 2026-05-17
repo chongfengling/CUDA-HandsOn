@@ -9,7 +9,8 @@
  * @brief Double Buffered (Software Pipelining) GEMM
  *
  * @algorithm
- * - Allocates **two sets** of Shared Memory buffers (As[2], Bs[2]).
+ * - Allocates **two sets** of Shared Memory buffers (As[2], Bs[2]) while
+ *   matching the code structure and 2D thread-tile mapping of `gemm_register.cu`.
  * - **Software Pipelining**: While the CUDA cores are computing the matrix multiplication for the `current` tile using buffer 0, the memory units are simultaneously loading the `next` tile from Global Memory into buffer 1.
  * - **Latency Hiding**: Effectively hides the Global Memory latency behind the math instructions, ensuring CUDA cores are rarely starved for data.
  */
@@ -21,24 +22,36 @@ __global__ void gemm_double_buffered_kernel(
     const T* __restrict__ B,
     T* __restrict__ C)
 {
-    // Double buffers in Shared Memory
-    __shared__ T As[2][BK][BM];
-    __shared__ T Bs[2][BK][BN];
-
+    // Thread and block indices
     int tx = threadIdx.x;
     int ty = threadIdx.y;
     int bx = blockIdx.x;
     int by = blockIdx.y;
-    int tid = ty * blockDim.x + tx;
 
+    // Double buffers in Shared Memory. As is transposed for vectorized loads.
+    __shared__ T As[2][BK][BM];
+    __shared__ T Bs[2][BK][BN];
+
+    // Accumulators in registers (8x8 sub-tile per thread)
     T r_c[TM][TN];
     #pragma unroll
-    for (int i = 0; i < TM; i++) {
+    for (int m = 0; m < TM; m++) {
         #pragma unroll
-        for (int j = 0; j < TN; j++) {
-            r_c[i][j] = T(0);
+        for (int n = 0; n < TN; n++) {
+            r_c[m][n] = T(0);
         }
     }
+
+    // Register fragments for A and B to support outer-product computation
+    T fragA[TM];
+    T fragB[TN];
+
+    // Top-left corner of the C sub-tile this thread is responsible for
+    int row = by * BM + ty * TM;
+    int col = bx * BN + tx * TN;
+
+    // Linear thread ID in a 16x16 block (0-255)
+    int tid = ty * blockDim.x + tx;
 
     int a_load_row = tid / (BK / 4); 
     int a_load_col = (tid % (BK / 4)) * 4;
@@ -56,7 +69,7 @@ __global__ void gemm_double_buffered_kernel(
             As[stage][a_load_col + 2][a_load_row] = tmp.z;
             As[stage][a_load_col + 3][a_load_row] = tmp.w;
         } else {
-            for(int i=0; i<4; i++) As[stage][a_load_col+i][a_load_row] = T(0);
+            for (int i = 0; i < 4; i++) As[stage][a_load_col + i][a_load_row] = T(0);
         }
 
         int b_global_row = k_tile + b_load_row;
@@ -84,18 +97,16 @@ __global__ void gemm_double_buffered_kernel(
         // Compute current tile (from previous load)
         #pragma unroll
         for (int k = 0; k < BK; k++) {
-            T fragA[TM];
-            T fragB[TN];
             #pragma unroll
-            for (int i = 0; i < TM; i++) fragA[i] = As[read_idx][k][ty * TM + i];
+            for (int m = 0; m < TM; m++) fragA[m] = As[read_idx][k][ty * TM + m];
             #pragma unroll
-            for (int i = 0; i < TN; i++) fragB[i] = Bs[read_idx][k][tx * TN + i];
+            for (int n = 0; n < TN; n++) fragB[n] = Bs[read_idx][k][tx * TN + n];
 
             #pragma unroll
-            for (int i = 0; i < TM; i++) {
+            for (int m = 0; m < TM; m++) {
                 #pragma unroll
-                for (int j = 0; j < TN; j++) {
-                    r_c[i][j] += fragA[i] * fragB[j];
+                for (int n = 0; n < TN; n++) {
+                    r_c[m][n] += fragA[m] * fragB[n];
                 }
             }
         }
@@ -108,30 +119,29 @@ __global__ void gemm_double_buffered_kernel(
     int final_read_idx = write_idx ^ 1;
     #pragma unroll
     for (int k = 0; k < BK; k++) {
-        T fragA[TM];
-        T fragB[TN];
         #pragma unroll
-        for (int i = 0; i < TM; i++) fragA[i] = As[final_read_idx][k][ty * TM + i];
+        for (int m = 0; m < TM; m++) fragA[m] = As[final_read_idx][k][ty * TM + m];
         #pragma unroll
-        for (int i = 0; i < TN; i++) fragB[i] = Bs[final_read_idx][k][tx * TN + i];
+        for (int n = 0; n < TN; n++) fragB[n] = Bs[final_read_idx][k][tx * TN + n];
         #pragma unroll
-        for (int i = 0; i < TM; i++) {
+        for (int m = 0; m < TM; m++) {
             #pragma unroll
-            for (int j = 0; j < TN; j++) {
-                r_c[i][j] += fragA[i] * fragB[j];
+            for (int n = 0; n < TN; n++) {
+                r_c[m][n] += fragA[m] * fragB[n];
             }
         }
     }
 
-    // Write results
-    int row = by * BM + ty * TM;
-    int col = bx * BN + tx * TN;
+    // Write the final accumulated results from registers back to Global Memory C.
     #pragma unroll
-    for (int i = 0; i < TM; i++) {
+    for (int m = 0; m < TM; m++) {
         #pragma unroll
-        for (int j = 0; j < TN; j++) {
-            if (row + i < M && col + j < N) {
-                C[(row + i) * N + (col + j)] = r_c[i][j];
+        for (int n = 0; n < TN; n++) {
+            int c_global_row = row + m;
+            int c_global_col = col + n;
+
+            if (c_global_row < M && c_global_col < N) {
+                C[c_global_row * N + c_global_col] = r_c[m][n];
             }
         }
     }

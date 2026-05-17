@@ -77,9 +77,10 @@ int main() {
         results.push_back(run_benchmark(M, N, K, GemmAlgo::REGISTER, "REGISTER"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::VECTORIZED, "VECTORIZED"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::DOUBLE_BUFFERED, "DOUBLE_BUF"));
-        results.push_back(run_benchmark(M, N, K, GemmAlgo::ASYNC, "ASYNC"));
+        results.push_back(run_benchmark(M, N, K, GemmAlgo::TENSOR_CORE, "TENSOR_CORE"));
+        // results.push_back(run_benchmark(M, N, K, GemmAlgo::ASYNC, "ASYNC"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::ULTIMATE, "ULTIMATE"));
-        results.push_back(run_benchmark(M, N, K, GemmAlgo::ZHIHU, "ZHIHU"));
+        // results.push_back(run_benchmark(M, N, K, GemmAlgo::ZHIHU, "ZHIHU"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::CUBLAS, "CUBLAS"));
         results.push_back(run_benchmark(M, N, K, GemmAlgo::CUTLASS, "CUTLASS"));
 
