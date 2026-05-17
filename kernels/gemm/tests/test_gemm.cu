@@ -34,9 +34,9 @@ void init_matrix(std::vector<float>& mat) {
 
 bool verify(int M, int N,
             const std::vector<float>& C_cpu,
-            const std::vector<float>& C_gpu) {
+            const std::vector<float>& C_gpu,
+            float eps = 1e-3f) {
 
-    const float eps = 1e-3f;
     for (int i = 0; i < M * N; ++i) {
         if (std::abs(C_cpu[i] - C_gpu[i]) > eps) {
             std::cerr << "Mismatch at " << i
@@ -75,7 +75,8 @@ void run_test(int M, int N, int K,
 
     CUDA_CHECK(cudaMemcpy(C_gpu.data(), d_C, M * N * sizeof(float), cudaMemcpyDeviceToHost));
 
-    if (!verify(M, N, C_cpu, C_gpu)) {
+    float eps = (algo == GemmAlgo::TENSOR_CORE) ? 5e-2f : 1e-3f;
+    if (!verify(M, N, C_cpu, C_gpu, eps)) {
         std::cerr << "FAILED!" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -110,6 +111,7 @@ int main() {
     run_algo_tests(GemmAlgo::REGISTER, "REGISTER");
     run_algo_tests(GemmAlgo::VECTORIZED, "VECTORIZED");
     run_algo_tests(GemmAlgo::DOUBLE_BUFFERED, "DOUBLE_BUFFERED");
+    run_algo_tests(GemmAlgo::TENSOR_CORE, "TENSOR_CORE");
     run_algo_tests(GemmAlgo::ASYNC, "ASYNC");
     run_algo_tests(GemmAlgo::ULTIMATE, "ULTIMATE");
     run_algo_tests(GemmAlgo::ZHIHU, "ZHIHU");

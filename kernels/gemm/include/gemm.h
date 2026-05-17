@@ -10,6 +10,7 @@ enum class GemmAlgo {
     REGISTER,
     VECTORIZED,
     DOUBLE_BUFFERED,
+    TENSOR_CORE,
     ASYNC,
     ULTIMATE,
     ZHIHU,

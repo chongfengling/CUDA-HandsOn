@@ -19,6 +19,9 @@ void dispatch_gemm(int M, int N, int K, const float* A, const float* B, float* C
         case GemmAlgo::DOUBLE_BUFFERED:
             launch_gemm_double_buffered(A, B, C, M, N, K);
             break;
+        case GemmAlgo::TENSOR_CORE:
+            launch_gemm_tensor_core(A, B, C, M, N, K);
+            break;
         case GemmAlgo::ASYNC:
             launch_gemm_async(A, B, C, M, N, K);
             break;

@@ -26,6 +26,7 @@ add_library(gemm_lib
     src/gemm_register.cu
     src/gemm_vectorized.cu
     src/gemm_double_buffered.cu
+    src/gemm_tensor_core.cu
     src/gemm_async.cu
     src/gemm_ultimate.cu
     src/gemm_zhihu.cu
@@ -45,5 +46,5 @@ add_executable(bench_gemm tests/bench_gemm.cu)
 target_link_libraries(bench_gemm PRIVATE gemm_lib)
 
 # Profiling
-add_executable(profile_gemm tests/profile_gemm.cu)
-target_link_libraries(profile_gemm PRIVATE gemm_lib)
+# add_executable(profile_gemm tests/profile_gemm.cu)
+# target_link_libraries(profile_gemm PRIVATE gemm_lib)
