@@ -6,12 +6,11 @@
 
 /**
  * @file gemm_ultimate.cu
- * @brief Warp-Tiling & Bank-Conflict-Free GEMM (Ultimate Manual Tuning)
+ * @brief Warp-Tiling GEMM (Ultimate Manual Tuning)
  *
  * @algorithm
  * - Combines all previous techniques: Double Buffering, Vectorized Access, and Register Tiling.
  * - **Warp Tiling**: Organizes the 2D Thread Tiling precisely around hardware Warps (32 threads). Each warp is responsible for a 64x32 sub-tile to optimize instruction dispatch.
- * - **Bank Conflict Elimination**: Carefully pads and transposes Shared Memory arrays (`As`) to ensure that all threads in a warp access different Memory Banks simultaneously.
  */
 
 template <int BM, int BN, int BK, int TM, int TN>

@@ -20,20 +20,26 @@ We follow a progressive optimization path to reach high performance:
 3.  **REGISTER**: Introduces 2D thread-level tiling. Data is moved from shared memory to registers to reduce shared memory bandwidth pressure.
 4.  **VECTORIZED**: Uses `float4` vectorized loads to maximize memory throughput.
 5.  **DOUBLE_BUFFERED**: Implements software pipelining to overlap global-to-shared memory transfers with computation.
-6.  **ASYNC**: Utilizes NVIDIA Ampere+ `cp.async` instructions for asynchronous data movement from global to shared memory.
-7.  **ULTIMATE**: A hand-tuned kernel combining warp-tiling, bank-conflict-free shared memory access, and extreme register reuse.
-8.  **ZHIHU**: A high-performance implementation based on community best practices (Ref: [Zhihu](https://zhuanlan.zhihu.com/p/1910636263666610461)).
-9.  **CUBLAS/CUTLASS**: Industry-standard implementations used as performance gold standards.
+6.  **ULTIMATE**: A hand-tuned kernel combining warp-tiling, bank-conflict-free shared memory access, and extreme register reuse.
+7.  **CUBLAS/CUTLASS**: Industry-standard implementations used as performance gold standards.
 
 ## Performance Comparison (GFLOPS)
 
 Benchmarks performed on local GPU (Architecture: SM 80/Blackwell).
+Currenrtly, we only have results for M=N=K=1024 and don't benchmark across different shapes. The results are as follows:
 
-| Matrix Size ($M=N=K$) | NAIVE | SHARED | REGISTER | VECTORIZED | ULTIMATE | CUBLAS | PyTorch |
-| :------------------- | :---- | :----- | :------- | :--------- | :------- | :----- | :------ |
-| 1024                 | 3568  | 4291   | 13432    | 15836      | 24364    | 26867  | 26826   |
-| 2048                 | 3191  | 4352   | 16687    | 23733      | 20902    | 32413  | 33375   |
-| 4096                 | 3288  | 4518   | 19065    | 25646      | 25503    | 37975  | 35040   |
+| M | N | K | Algorithm | Time (ms) | GFLOPS | vs cuBLAS |
+| :---: | :---: | :---: | :--- | ---: | ---: | ---: |
+| 1024 | 1024 | 1024 | NAIVE | 0.6752 | 3180.54 | 11.78% |
+| 1024 | 1024 | 1024 | SHARED_MEM | 0.4383 | 4899.96 | 18.15% |
+| 1024 | 1024 | 1024 | REGISTER | 0.1598 | 13439.24 | 49.77% |
+| 1024 | 1024 | 1024 | VECTORIZED | 0.1341 | 16017.58 | 59.32% |
+| 1024 | 1024 | 1024 | DOUBLE_BUF | 0.1197 | 17945.47 | 66.46% |
+| 1024 | 1024 | 1024 | TENSOR_CORE | 0.1627 | 13196.64 | 48.87% |
+| 1024 | 1024 | 1024 | ULTIMATE | 0.0900 | 23861.78 | 88.37% |
+| 1024 | 1024 | 1024 | CUBLAS | 0.0795 | 27002.32 | 100.00% |
+| 1024 | 1024 | 1024 | CUTLASS | 0.0764 | 28126.10 | 104.16% |
+
 
 ## Directory Structure
 
